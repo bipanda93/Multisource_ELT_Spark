@@ -255,9 +255,9 @@ Ce projet m'a permis d'acquérir des compétences en :
 
 # 👨‍💻 Auteur
 
-**Bipanda**
+**Bipanda Franck Ulrich**
 
-🎓 Mastère Data Engineering
+🎓 Mastère Data Engineering - Digital school fo Paris
 
 🔗 GitHub : https://github.com/bipanda93/Multisource_ELT_Spark
 
