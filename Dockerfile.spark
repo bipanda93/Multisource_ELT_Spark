@@ -1,0 +1,15 @@
+FROM apache/spark:3.5.1-python3
+
+USER root
+
+RUN pip install --no-cache-dir \
+    pyspark==3.5.1 \
+    py4j==0.10.9.7 \
+    pyhocon==0.3.61
+
+ENV SPARK_HOME=/opt/spark
+ENV PYTHONPATH=/opt/spark/python:/opt/spark/python/lib/py4j-0.10.9.7-src.zip
+ENV PYSPARK_PYTHON=python3
+ENV PYSPARK_DRIVER_PYTHON=python3
+
+WORKDIR /opt/tp_multisource

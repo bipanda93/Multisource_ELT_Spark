@@ -1,0 +1,198 @@
+services:
+  postgres:
+    image: postgres:16
+    hostname: postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tp_multisource
+
+    ports:
+      - "5436:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./data/reference/sql:/docker-entrypoint-initdb.d:ro
+
+    networks:
+      - tp-net
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U postgres -d tp_multisource"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  mongo:
+    image: mongo:7
+    hostname: mongo
+    restart: unless-stopped
+
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+      MONGO_INITDB_DATABASE: tp_multisource
+
+    ports:
+      - "27018:27017"
+
+    volumes:
+      - mongo_data:/data/db
+      - ./data:/workspace/data
+      - .:/workspace
+
+    networks:
+      - tp-net
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mongosh",
+          "--quiet",
+          "--username",
+          "admin",
+          "--password",
+          "admin",
+          "--authenticationDatabase",
+          "admin",
+          "--eval",
+          "quit(db.adminCommand({ ping: 1 }).ok ? 0 : 1)"
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 15
+      start_period: 30s
+
+
+  spark-master:
+    image: spark:python3
+    hostname: spark-master
+    restart: unless-stopped
+
+    command:
+      - /opt/spark/bin/spark-class
+      - org.apache.spark.deploy.master.Master
+      - --host
+      - spark-master
+      - --port
+      - "7077"
+      - --webui-port
+      - "8080"
+
+    ports:
+      - "7078:7077"
+      - "8088:8080"
+
+    volumes:
+      - ./data:/workspace/data
+      - .:/workspace
+
+    working_dir: /workspace
+
+    networks:
+      - tp-net
+
+
+  spark-worker-1:
+    image: spark:python3
+    hostname: spark-worker-1
+    restart: unless-stopped
+
+    depends_on:
+      spark-master:
+        condition: service_started
+
+    command:
+      - /opt/spark/bin/spark-class
+      - org.apache.spark.deploy.worker.Worker
+      - spark://spark-master:7077
+      - --webui-port
+      - "8081"
+
+    environment:
+      SPARK_WORKER_CORES: "2"
+      SPARK_WORKER_MEMORY: "2g"
+
+    ports:
+      - "8089:8081"
+
+    volumes:
+      - ./data:/workspace/data
+      - .:/workspace
+
+    working_dir: /workspace
+
+    networks:
+      - tp-net
+
+
+  driver:
+    image: spark:python3
+    hostname: driver
+    restart: unless-stopped
+
+    depends_on:
+      spark-master:
+        condition: service_started
+
+      spark-worker-1:
+        condition: service_started
+
+      postgres:
+        condition: service_healthy
+
+      mongo:
+        condition: service_healthy
+
+    working_dir: /workspace
+
+    volumes:
+      - ./data:/workspace/data
+      - .:/workspace
+
+      # Cache Ivy persistant pour les connecteurs Spark
+      - ivy_cache:/tmp/ivy-cache
+
+    environment:
+      SPARK_MASTER: spark://spark-master:7077
+      SPARK_DRIVER_HOST: driver
+      SPARK_LOCAL_HOSTNAME: driver
+      PYTHONUNBUFFERED: "1"
+
+      # Évite les problèmes de permissions liés au dossier utilisateur
+      JAVA_TOOL_OPTIONS: "-Duser.home=/tmp"
+
+      # Utile seulement si pyhocon est installé dans /tmp/pyhocon
+      PYTHONPATH: "/tmp/pyhocon"
+
+    command: sleep infinity
+
+    stdin_open: true
+    tty: true
+
+    networks:
+      - tp-net
+
+
+volumes:
+  postgres_data:
+    name: tp_multisource_postgres_data
+
+  mongo_data:
+    name: tp_multisource_mongo_data
+
+  ivy_cache:
+    name: tp_multisource_ivy_cache
+
+
+networks:
+  tp-net:
+    name: tp_multisource_network
+    driver: bridge
