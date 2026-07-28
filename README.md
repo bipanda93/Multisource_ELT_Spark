@@ -2,93 +2,87 @@
 
 <p align="center">
 
-<img src="https://img.shields.io/badge/Python-3.11-blue?style=for-the-badge&logo=python"/>
-
-<img src="https://img.shields.io/badge/Apache%20Spark-3.x-orange?style=for-the-badge&logo=apachespark"/>
-
-<img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker"/>
-
-<img src="https://img.shields.io/badge/PostgreSQL-16-336791?style=for-the-badge&logo=postgresql"/>
-
-<img src="https://img.shields.io/badge/MongoDB-7-47A248?style=for-the-badge&logo=mongodb"/>
-
-<img src="https://img.shields.io/badge/Status-Completed-success?style=for-the-badge"/>
+![Python](https://img.shields.io/badge/Python-3.11-blue?style=for-the-badge&logo=python)
+![Apache Spark](https://img.shields.io/badge/Apache%20Spark-3.x-orange?style=for-the-badge&logo=apachespark)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=for-the-badge&logo=postgresql)
+![MongoDB](https://img.shields.io/badge/MongoDB-7-47A248?style=for-the-badge&logo=mongodb)
+![Statut](https://img.shields.io/badge/Projet-Terminé-success?style=for-the-badge)
 
 </p>
 
 ---
 
-# 📖 Overview
+# 📖 Présentation
 
-**Multisource_ELT_Spark** is a distributed Data Engineering project implementing a complete ETL pipeline with **Apache Spark**.
+**Multisource_ELT_Spark** est un projet de **Data Engineering** mettant en œuvre un pipeline **ETL distribué** avec **Apache Spark**.
 
-The pipeline extracts data from multiple heterogeneous sources, applies business rules, performs data quality validation and produces analytical datasets following the **Bronze → Silver → Gold** architecture.
+Le projet consiste à extraire des données provenant de plusieurs sources hétérogènes, à appliquer des règles métier, à contrôler la qualité des données puis à produire des jeux de données analytiques selon une architecture **Bronze → Silver → Gold**.
 
-This project was developed as part of a Master's degree in Data Engineering.
-
----
-
-# 🎯 Objectives
-
-The project demonstrates how to build an industrial ETL pipeline capable of:
-
-- Extracting data from heterogeneous sources
-- Cleaning and validating datasets
-- Applying business rules
-- Detecting invalid records
-- Creating a Reject Zone
-- Producing reliable analytical tables
-- Implementing a modern Data Lake architecture
+Ce projet a été réalisé dans le cadre du Mastère Data Engineering.
 
 ---
 
-# 🏗 System Architecture
+# 🎯 Objectifs
+
+Le pipeline permet de :
+
+- Extraire des données depuis plusieurs sources
+- Nettoyer et normaliser les données
+- Contrôler leur qualité
+- Appliquer des règles métier
+- Gérer les données rejetées
+- Produire des tables analytiques fiables
+- Illustrer une architecture Data Lake moderne
+
+---
+
+# 🏗️ Architecture
 
 ```text
-          PostgreSQL          MongoDB          JSON Files
-               │                 │                 │
-               └──────────┬──────┴──────┬──────────┘
-                          │
-                 Apache Spark Cluster
-              (Driver • Master • Worker)
-                          │
-                          ▼
-                    Bronze Layer
-                          │
-                          ▼
-                    Silver Layer
-                  ┌────────┴────────┐
-                  ▼                 ▼
-             Gold Layer       Reject Zone
-                  │
-                  ▼
-      Business Intelligence / Analytics
+        PostgreSQL        MongoDB        Fichiers JSON
+             │               │                │
+             └───────┬───────┴───────┬────────┘
+                     │
+             Cluster Apache Spark
+         (Driver • Master • Worker)
+                     │
+                     ▼
+               Couche Bronze
+                     │
+                     ▼
+               Couche Silver
+              ┌────────┴────────┐
+              ▼                 ▼
+        Couche Gold      Zone de Rejets
+              │
+              ▼
+      Reporting & Analyse
 ```
 
 ---
 
-# ⚙ Technologies
+# ⚙️ Technologies utilisées
 
-| Technology | Description |
-|------------|-------------|
-| Apache Spark | Distributed processing |
-| PySpark | ETL implementation |
-| Docker | Containerization |
-| Docker Compose | Service orchestration |
-| PostgreSQL | Relational database |
-| MongoDB | NoSQL database |
-| JSON | Semi-structured files |
-| Python | Main programming language |
+| Technologie | Description |
+|-------------|-------------|
+| Apache Spark | Traitement distribué |
+| PySpark | Développement du pipeline ETL |
+| Docker | Conteneurisation |
+| Docker Compose | Orchestration des services |
+| PostgreSQL | Base de données relationnelle |
+| MongoDB | Base de données NoSQL |
+| JSON | Source de données semi-structurée |
+| Python | Langage principal |
 
 ---
 
-# 📂 Project Structure
+# 📂 Structure du projet
 
 ```text
-Multisource_ELT_Spark/
-
-├── data/
+Multisource_ELT_Spark
 │
+├── data/
 ├── src/
 │   ├── main.py
 │   ├── extract.py
@@ -104,126 +98,104 @@ Multisource_ELT_Spark/
 
 ---
 
-# 🔄 ETL Workflow
+# 🔄 Fonctionnement du pipeline
 
-## 🥉 Bronze Layer
+## 🥉 Couche Bronze
 
-The Bronze layer stores raw data exactly as received.
-
-Sources:
+La couche Bronze stocke les données brutes telles qu'elles sont extraites depuis les différentes sources :
 
 - PostgreSQL
 - MongoDB
-- JSON files
+- Fichiers JSON
 
-No transformations are applied.
-
----
-
-## 🥈 Silver Layer
-
-The Silver layer performs data cleaning and validation.
-
-Business rules include:
-
-### Customers
-
-- Email validation
-
-### Orders
-
-- Negative total amounts corrected
-
-### Products
-
-- Product validation
-
-### Order Items
-
-- Negative unit prices corrected
-
-- Negative discounts replaced by 0
-
-- Discounts between 1 and 100 converted into percentages
-
-- Invalid quantities rejected
-
-### Reviews
-
-Validation of customer reviews
-
-### Delivery Events
-
-Validation of delivery events
+Aucune transformation n'est appliquée.
 
 ---
 
-## 🥇 Gold Layer
+## 🥈 Couche Silver
 
-The Gold layer produces clean analytical datasets used for reporting and business intelligence.
+Cette couche réalise le nettoyage des données et applique les règles métier.
 
----
+### Clients
 
-# ✅ Data Quality
+- Validation des adresses e-mail
 
-The pipeline automatically validates:
+### Commandes
 
-- Email format
-- Quantities
-- Prices
-- Discounts
-- Missing values
-- Business constraints
-- Invalid records
+- Correction des montants négatifs
 
-Invalid records are redirected to a dedicated Reject Zone.
+### Produits
 
----
+- Validation des informations produits
 
-# 📊 Pipeline Results
+### Lignes de commandes
 
-## Bronze
+- Correction des prix négatifs
+- Remplacement des remises négatives par 0
+- Conversion automatique des remises en pourcentage
+- Rejet des quantités invalides
 
-| Dataset | Records |
-|----------|---------|
-| Customers | 30 |
-| Orders | 40 |
-| Products | 15 |
-| Order Items | 80 |
-| Reviews | 30 |
-| Delivery Events | 60 |
+### Avis
+
+Validation des avis clients.
+
+### Livraisons
+
+Validation des événements de livraison.
 
 ---
 
-## Reject Zone
+## 🥇 Couche Gold
 
-| Reason | Count |
-|----------|------|
-| Invalid Email | 4 |
-| Invalid Quantity | 37 |
-| Invalid Discount | 11 |
-| Invalid Reviews | 10 |
-| Invalid Delivery Events | 18 |
+La couche Gold regroupe les données nettoyées destinées aux analyses décisionnelles et au reporting.
 
 ---
 
-## ✔ Quality Checks
+# ✅ Contrôle qualité
 
-- Email validation
+Le pipeline vérifie automatiquement :
 
-- Duplicate detection
+- Le format des adresses e-mail
+- Les quantités
+- Les prix
+- Les remises
+- Les valeurs nulles
+- Les règles métier
 
-- Null value validation
+Les données invalides sont envoyées dans une **Zone de Rejets**.
 
-- Business rules validation
+---
 
-- Gold generation completed successfully
+# 📊 Résultats du pipeline
+
+## Couche Bronze
+
+| Jeu de données | Nombre d'enregistrements |
+|----------------|-------------------------:|
+| Clients | 30 |
+| Commandes | 40 |
+| Produits | 15 |
+| Lignes de commandes | 80 |
+| Avis | 30 |
+| Événements de livraison | 60 |
+
+---
+
+## Zone de Rejets
+
+| Motif | Nombre |
+|--------|--------:|
+| Adresse e-mail invalide | 4 |
+| Quantité invalide | 37 |
+| Remise invalide | 11 |
+| Avis rejetés | 10 |
+| Événements de livraison rejetés | 18 |
 
 ---
 
 # 🚀 Installation
 
-Clone the repository
+Cloner le dépôt :
 
 ```bash
 git clone https://github.com/bipanda93/Multisource_ELT_Spark.git
@@ -231,25 +203,19 @@ git clone https://github.com/bipanda93/Multisource_ELT_Spark.git
 cd Multisource_ELT_Spark
 ```
 
----
-
-Install dependencies
+Installer les dépendances :
 
 ```bash
 pip install -r requirements.txt
 ```
 
----
-
-Start Docker services
+Démarrer les services :
 
 ```bash
 docker compose up -d --build
 ```
 
----
-
-Run the ETL pipeline
+Lancer le pipeline :
 
 ```bash
 python src/main.py
@@ -257,65 +223,48 @@ python src/main.py
 
 ---
 
-# 📈 Future Improvements
+# 📈 Améliorations possibles
 
 - Apache Airflow
-
 - Delta Lake
-
 - Apache Kafka
-
 - Great Expectations
-
-- CI/CD
-
-- Unit Tests
-
-- Monitoring
-
-- Cloud Deployment
-
-- Databricks
+- Tests unitaires
+- Intégration continue (CI/CD)
+- Déploiement Cloud
+- Supervision et monitoring
 
 ---
 
-# 📚 Lessons Learned
+# 📚 Compétences développées
 
-This project provided practical experience with:
+Ce projet m'a permis d'acquérir des compétences en :
 
 - Apache Spark
-
-- Distributed Data Processing
-
+- PySpark
+- Data Engineering
 - Docker
-
 - PostgreSQL
-
 - MongoDB
-
-- ETL Development
-
-- Data Quality
-
-- Bronze / Silver / Gold Architecture
-
-- Business Rule Implementation
+- Architecture Bronze / Silver / Gold
+- Développement de pipelines ETL
+- Contrôle qualité des données
+- Application de règles métier
 
 ---
 
-# 👨‍💻 Author
+# 👨‍💻 Auteur
 
 **Bipanda**
 
-Master Data Engineering
+🎓 Mastère Data Engineering
 
-GitHub
-
-https://github.com/bipanda93
+🔗 GitHub : https://github.com/bipanda93/Multisource_ELT_Spark
 
 ---
 
-# ⭐ Support
+# ⭐ Remerciements
 
-If you like this project, don't forget to leave a ⭐ on the repository!
+Merci de votre visite !
 
+Si ce projet vous intéresse, n'hésitez pas à laisser une ⭐ sur le dépôt GitHub.
