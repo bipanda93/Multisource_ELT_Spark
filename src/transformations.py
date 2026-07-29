@@ -3,7 +3,7 @@ from typing import Dict
 
 from pyhocon import ConfigFactory
 from pyspark.sql import DataFrame, SparkSession, Window
-from pyspark.sql.functions import col, count, when, first, max, min, row_number, when
+from pyspark.sql.functions import col, count, when, first, max, min, row_number
 from pyspark.sql.types import (
     StringType,
     StructField,
@@ -513,7 +513,9 @@ def compare_json_schema(
                 f"manuel={expected_type}"
             )
 
-def build_delivery_summary(delivery_events: DataFrame) -> DataFrame:
+def build_delivery_summary(
+    delivery_events: DataFrame,
+) -> DataFrame:
     """
     Construit une ligne récapitulative par commande à partir
     des événements de livraison nettoyés.
@@ -523,14 +525,17 @@ def build_delivery_summary(delivery_events: DataFrame) -> DataFrame:
         Window
         .partitionBy("order_id")
         .orderBy(
-            col("event_timestamp").desc(),
+            col("event_timestamp").desc_nulls_last(),
             col("event_id").desc(),
         )
     )
 
-    events_ranked = delivery_events.withColumn(
-        "_event_rank",
-        row_number().over(order_window_desc),
+    events_ranked = (
+        delivery_events
+        .withColumn(
+            "_event_rank",
+            row_number().over(order_window_desc),
+        )
     )
 
     last_event = (
@@ -538,12 +543,24 @@ def build_delivery_summary(delivery_events: DataFrame) -> DataFrame:
         .filter(col("_event_rank") == 1)
         .select(
             "order_id",
-            col("event_timestamp").alias("last_event_timestamp"),
-            col("event_type").alias("last_delivery_status"),
-            col("location.city").alias("last_city"),
-            col("location.country").alias("last_country"),
-            col("carrier.id").alias("carrier_id"),
-            col("carrier.name").alias("carrier_name"),
+            col("event_timestamp").alias(
+                "last_event_timestamp"
+            ),
+            col("event_type").alias(
+                "last_delivery_status"
+            ),
+            col("location.city").alias(
+                "last_city"
+            ),
+            col("location.country").alias(
+                "last_country"
+            ),
+            col("carrier.id").alias(
+                "carrier_id"
+            ),
+            col("carrier.name").alias(
+                "carrier_name"
+            ),
         )
     )
 
@@ -551,20 +568,22 @@ def build_delivery_summary(delivery_events: DataFrame) -> DataFrame:
         delivery_events
         .groupBy("order_id")
         .agg(
-            min("event_timestamp").alias("first_event_timestamp"),
-            max("event_timestamp").alias("_max_event_timestamp"),
-            count("*").alias("number_of_events"),
-
+            min("event_timestamp").alias(
+                "first_event_timestamp"
+            ),
+            count("*").alias(
+                "number_of_events"
+            ),
             min(
                 when(
                     col("event_type").isin(
                         "SHIPPED",
                         "IN_TRANSIT",
+                        "OUT_FOR_DELIVERY",
                     ),
                     col("event_timestamp"),
                 )
             ).alias("shipping_date"),
-
             min(
                 when(
                     col("event_type") == "DELIVERED",
@@ -572,10 +591,13 @@ def build_delivery_summary(delivery_events: DataFrame) -> DataFrame:
                 )
             ).alias("delivery_date"),
         )
-        .drop("_max_event_timestamp")
     )
 
     return (
         event_aggregates
-        .join(last_event, on="order_id", how="left")
+        .join(
+            last_event,
+            on="order_id",
+            how="left",
+        )
     )

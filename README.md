@@ -1,270 +1,450 @@
-# 🚀 Multisource_ELT_Spark
+# MultiSourceDataCleaning
 
-<p align="center">
+> **Pipeline ETL distribué développé avec Apache Spark (PySpark) permettant d'extraire, nettoyer, valider et transformer des données provenant de plusieurs sources selon une architecture Bronze → Silver → Gold.**
 
-![Python](https://img.shields.io/badge/Python-3.11-blue?style=for-the-badge&logo=python)
-![Apache Spark](https://img.shields.io/badge/Apache%20Spark-3.x-orange?style=for-the-badge&logo=apachespark)
-![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=for-the-badge&logo=postgresql)
-![MongoDB](https://img.shields.io/badge/MongoDB-7-47A248?style=for-the-badge&logo=mongodb)
-![Statut](https://img.shields.io/badge/Projet-Terminé-success?style=for-the-badge)
-
-</p>
+![Python](https://img.shields.io/badge/Python-3.x-blue?logo=python)
+![Apache Spark](https://img.shields.io/badge/Apache%20Spark-4.x-E25A1C?logo=apachespark)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql)
+![MongoDB](https://img.shields.io/badge/MongoDB-7-47A248?logo=mongodb)
+![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)
 
 ---
 
-# 📖 Présentation
+# Table des matières
 
-**Multisource_ELT_Spark** est un projet de **Data Engineering** mettant en œuvre un pipeline **ETL distribué** avec **Apache Spark**.
-
-Le projet consiste à extraire des données provenant de plusieurs sources hétérogènes, à appliquer des règles métier, à contrôler la qualité des données puis à produire des jeux de données analytiques selon une architecture **Bronze → Silver → Gold**.
-
-Ce projet a été réalisé dans le cadre du Mastère Data Engineering.
-
----
-
-# 🎯 Objectifs
-
-Le pipeline permet de :
-
-- Extraire des données depuis plusieurs sources
-- Nettoyer et normaliser les données
-- Contrôler leur qualité
-- Appliquer des règles métier
-- Gérer les données rejetées
-- Produire des tables analytiques fiables
-- Illustrer une architecture Data Lake moderne
-
----
-
-# 🏗️ Architecture
-
-```text
-        PostgreSQL        MongoDB        Fichiers JSON
-             │               │                │
-             └───────┬───────┴───────┬────────┘
-                     │
-             Cluster Apache Spark
-         (Driver • Master • Worker)
-                     │
-                     ▼
-               Couche Bronze
-                     │
-                     ▼
-               Couche Silver
-              ┌────────┴────────┐
-              ▼                 ▼
-        Couche Gold      Zone de Rejets
-              │
-              ▼
-      Reporting & Analyse
-```
+- Présentation du projet
+- Objectifs
+- Architecture
+- Technologies utilisées
+- Structure du projet
+- Sources de données
+- Pipeline ETL
+- Couche Bronze
+- Couche Silver
+- Couche Gold
+- Contrôles qualité
+- Gestion des données rejetées
+- Requêtes SQL analytiques
+- Résultats générés
+- Installation
+- Exécution du pipeline
+- Déroulement de l'exécution
+- Points forts
+- Améliorations possibles
+- Auteur
 
 ---
 
-# ⚙️ Technologies utilisées
+# Présentation du projet
 
-| Technologie | Description |
-|-------------|-------------|
-| Apache Spark | Traitement distribué |
-| PySpark | Développement du pipeline ETL |
-| Docker | Conteneurisation |
-| Docker Compose | Orchestration des services |
-| PostgreSQL | Base de données relationnelle |
-| MongoDB | Base de données NoSQL |
-| JSON | Source de données semi-structurée |
-| Python | Langage principal |
+Ce projet met en œuvre un pipeline **ETL distribué** capable de traiter plusieurs sources de données hétérogènes.
 
----
-
-# 📂 Structure du projet
-
-```text
-Multisource_ELT_Spark
-│
-├── data/
-├── src/
-│   ├── main.py
-│   ├── extract.py
-│   ├── cleaning.py
-│   ├── quality.py
-│   ├── gold.py
-│   └── config.py
-│
-├── docker-compose.yml
-├── requirements.txt
-└── README.md
-```
-
----
-
-# 🔄 Fonctionnement du pipeline
-
-## 🥉 Couche Bronze
-
-La couche Bronze stocke les données brutes telles qu'elles sont extraites depuis les différentes sources :
+L'objectif est de consolider des données opérationnelles provenant de :
 
 - PostgreSQL
 - MongoDB
 - Fichiers JSON
 
-Aucune transformation n'est appliquée.
+afin de produire une **couche Gold** propre, validée et prête pour l'analyse.
+
+Le projet suit l'architecture **Medallion (Bronze → Silver → Gold)**, largement utilisée dans les plateformes modernes de traitement de données.
 
 ---
 
-## 🥈 Couche Silver
+# Objectifs
 
-Cette couche réalise le nettoyage des données et applique les règles métier.
+Le pipeline permet automatiquement de :
 
-### Clients
-
-- Validation des adresses e-mail
-
-### Commandes
-
-- Correction des montants négatifs
-
-### Produits
-
-- Validation des informations produits
-
-### Lignes de commandes
-
-- Correction des prix négatifs
-- Remplacement des remises négatives par 0
-- Conversion automatique des remises en pourcentage
-- Rejet des quantités invalides
-
-### Avis
-
-Validation des avis clients.
-
-### Livraisons
-
-Validation des événements de livraison.
+- Extraire des données depuis plusieurs sources.
+- Nettoyer les données.
+- Standardiser les formats.
+- Détecter les données invalides.
+- Isoler les enregistrements rejetés.
+- Réaliser des contrôles qualité.
+- Construire des jeux de données métiers.
+- Exécuter des requêtes SQL analytiques.
+- Sauvegarder les résultats au format Parquet.
 
 ---
 
-## 🥇 Couche Gold
+# Architecture
 
-La couche Gold regroupe les données nettoyées destinées aux analyses décisionnelles et au reporting.
+```text
+                  PostgreSQL
+                       │
+         ┌─────────────┼─────────────┐
+         │             │             │
+     Clients      Commandes   Lignes de commande
+         │
+         ▼
 
----
-
-# ✅ Contrôle qualité
-
-Le pipeline vérifie automatiquement :
-
-- Le format des adresses e-mail
-- Les quantités
-- Les prix
-- Les remises
-- Les valeurs nulles
-- Les règles métier
-
-Les données invalides sont envoyées dans une **Zone de Rejets**.
-
----
-
-# 📊 Résultats du pipeline
-
-## Couche Bronze
-
-| Jeu de données | Nombre d'enregistrements |
-|----------------|-------------------------:|
-| Clients | 30 |
-| Commandes | 40 |
-| Produits | 15 |
-| Lignes de commandes | 80 |
-| Avis | 30 |
-| Événements de livraison | 60 |
-
----
-
-## Zone de Rejets
-
-| Motif | Nombre |
-|--------|--------:|
-| Adresse e-mail invalide | 4 |
-| Quantité invalide | 37 |
-| Remise invalide | 11 |
-| Avis rejetés | 10 |
-| Événements de livraison rejetés | 18 |
-
----
-
-# 🚀 Installation
-
-Cloner le dépôt :
-
-```bash
-git clone https://github.com/bipanda93/Multisource_ELT_Spark.git
-
-cd Multisource_ELT_Spark
-```
-
-Installer les dépendances :
-
-```bash
-pip install -r requirements.txt
-```
-
-Démarrer les services :
-
-```bash
-docker compose up -d --build
-```
-
-Lancer le pipeline :
-
-```bash
-python src/main.py
+MongoDB ------------ Bronze ------------ JSON
+ Avis clients                Événements de livraison
+                       │
+                       ▼
+          Nettoyage et standardisation
+                       │
+                       ▼
+                 Couche Silver
+                       │
+        ┌──────────────┴──────────────┐
+        │                             │
+ Contrôles qualité          Gestion des rejets
+        │                             │
+        └──────────────┬──────────────┘
+                       ▼
+                  Couche Gold
+                       │
+       customer_order_360
+       sales_by_product
+       customer_orders
+       product_ratings
+       delivery_status
+       order_items_summary
+       order_products_summary
+       order_reviews_summary
+       delivery_summary
+                       │
+                       ▼
+           Validation des données
+                       │
+                       ▼
+          Requêtes SQL analytiques
+                       │
+                       ▼
+             Sauvegarde au format Parquet
 ```
 
 ---
 
-# 📈 Améliorations possibles
+# Technologies utilisées
 
-- Apache Airflow
-- Delta Lake
-- Apache Kafka
-- Great Expectations
-- Tests unitaires
-- Intégration continue (CI/CD)
-- Déploiement Cloud
-- Supervision et monitoring
-
----
-
-# 📚 Compétences développées
-
-Ce projet m'a permis d'acquérir des compétences en :
-
-- Apache Spark
-- PySpark
-- Data Engineering
-- Docker
-- PostgreSQL
-- MongoDB
-- Architecture Bronze / Silver / Gold
-- Développement de pipelines ETL
-- Contrôle qualité des données
-- Application de règles métier
+| Technologie | Rôle |
+|--------------|------|
+| Python | Développement du pipeline ETL |
+| Apache Spark | Traitement distribué |
+| PySpark DataFrame API | Transformations de données |
+| PostgreSQL | Base de données relationnelle |
+| MongoDB | Base de données NoSQL |
+| JSON | Source semi-structurée |
+| Docker | Conteneurisation |
+| Docker Compose | Orchestration des services |
+| SQL | Analyses et reporting |
+| Parquet | Format de stockage des résultats |
 
 ---
 
-# 👨‍💻 Auteur
+# Structure du projet
 
-**Bipanda Franck Ulrich**
+```text
+tp_multisource/
 
-🎓 Mastère Data Engineering - Digital school of Paris
+├── config/
+├── data/
+│   ├── delivery_events/
+│   ├── output/
+│   │   ├── gold/
+│   │   ├── rejects/
+│   │   ├── sql_results/
+│   │   └── validation_results/
+│   └── reference/
+│
+├── sql/
+│   ├── analytical_queries/
+│   └── tables/
+│
+├── src/
+│   ├── extract.py
+│   ├── cleaning.py
+│   ├── quality.py
+│   ├── transformation.py
+│   ├── load.py
+│   ├── sql_runner.py
+│   └── main.py
+│
+├── docker-compose.yml
+├── requirements.txt
+└── README.md
 
-🔗 GitHub : https://github.com/bipanda93/Multisource_ELT_Spark
+```
 
 ---
 
-# ⭐ Remerciements
+# Sources de données
 
-Merci de votre visite !
+## PostgreSQL
 
-Si ce projet vous intéresse, n'hésitez pas à laisser une ⭐ sur le dépôt GitHub.
+Les données relationnelles sont extraites via JDBC.
+
+Tables utilisées :
+
+- customers
+- orders
+- order_items
+- products
+
+## MongoDB
+
+Collection utilisée :
+
+- reviews
+
+## JSON
+
+Les événements de livraison sont lus depuis :
+
+```text
+data/delivery_events/
+```
+
+---
+
+# Pipeline ETL
+
+Le pipeline est composé de plusieurs étapes permettant de transformer des données brutes en jeux de données exploitables.
+
+## 1. Extraction des données
+
+Les données sont extraites depuis trois sources différentes :
+
+- **PostgreSQL**
+  - Customers
+  - Orders
+  - Order Items
+  - Products
+
+- **MongoDB**
+  - Reviews
+
+- **JSON**
+  - Delivery Events
+
+Toutes les données sont chargées dans des DataFrames Spark afin d'être traitées de manière distribuée.
+
+---
+
+# Couche Bronze
+
+La couche **Bronze** représente les données brutes extraites depuis les différentes sources.
+
+Aucune transformation métier n'est réalisée à cette étape.
+
+Objectifs :
+
+- conserver les données originales ;
+- centraliser les différentes sources ;
+- garantir la traçabilité des données.
+
+---
+
+# Couche Silver
+
+La couche **Silver** applique toutes les opérations de nettoyage et de standardisation.
+
+Les traitements réalisés comprennent notamment :
+
+- suppression des doublons ;
+- suppression des valeurs inutiles ;
+- normalisation des identifiants ;
+- nettoyage des chaînes de caractères ;
+- uniformisation des statuts ;
+- conversion des types de données ;
+- conversion des dates ;
+- standardisation des formats.
+
+Les enregistrements invalides sont automatiquement isolés afin de ne pas impacter les traitements suivants.
+
+---
+
+# Contrôles qualité
+
+Plusieurs contrôles sont exécutés automatiquement.
+
+Les principales validations concernent :
+
+- identifiants nuls ;
+- doublons ;
+- montants négatifs ;
+- notes comprises entre 1 et 5 ;
+- cohérence des dates ;
+- cohérence des montants ;
+- présence des clients ;
+- présence des livraisons ;
+- cohérence des statuts.
+
+Les résultats sont sauvegardés dans :
+
+```text
+data/output/validation_results/
+```
+
+---
+
+# Gestion des données rejetées
+
+Les enregistrements invalides sont exportés automatiquement.
+
+Chaque rejet contient :
+
+- la source ;
+- le motif du rejet ;
+- la date de traitement ;
+- les données d'origine.
+
+Répertoire :
+
+```text
+data/output/rejects/
+```
+
+---
+
+# Couche Gold
+
+La couche **Gold** contient les jeux de données métiers utilisés pour l'analyse.
+
+Les DataFrames générés sont :
+
+| DataFrame | Description |
+|-----------|-------------|
+| customer_order_360 | Vue complète des commandes clients |
+| sales_by_product | Chiffre d'affaires par produit |
+| customer_orders | Statistiques des commandes clients |
+| product_ratings | Notes moyennes des produits |
+| delivery_status | Suivi des livraisons |
+| order_items_summary | Synthèse des lignes de commande |
+| order_products_summary | Synthèse des produits commandés |
+| order_reviews_summary | Synthèse des avis |
+| delivery_summary | Statistiques des livraisons |
+
+Tous les DataFrames Gold sont enregistrés au format **Parquet**.
+
+---
+
+# Requêtes SQL analytiques
+
+À chaque exécution, cinq requêtes SQL sont lancées automatiquement sur PostgreSQL.
+
+Les rapports disponibles sont :
+
+1. Ventes par produit
+2. Commandes par client
+3. Répartition des commandes par statut
+4. Chiffre d'affaires mensuel
+5. Meilleurs clients
+
+Les résultats sont :
+
+- affichés dans Spark ;
+- enregistrés automatiquement.
+
+Répertoire :
+
+```text
+data/output/sql_results/
+```
+
+---
+
+# Résultats générés
+
+Après chaque exécution, le projet produit automatiquement :
+
+```text
+data/output/
+
+├── gold/
+├── rejects/
+├── sql_results/
+└── validation_results/
+```
+
+Tous les résultats sont sauvegardés au format **Parquet**.
+
+---
+
+# Installation
+
+Démarrer les services Docker :
+
+```bash
+docker compose up -d
+```
+
+---
+
+# Exécution du pipeline
+
+```bash
+docker compose exec \
+-e JAVA_TOOL_OPTIONS="-Duser.home=/tmp" \
+-e PYTHONPATH=/tmp/pyhocon \
+driver \
+/opt/spark/bin/spark-submit \
+--master spark://spark-master:7077 \
+--executor-memory 1g \
+--executor-cores 1 \
+--conf spark.executor.instances=1 \
+--conf spark.jars.ivy=/tmp/ivy-cache \
+--packages org.postgresql:postgresql:42.7.3,org.mongodb.spark:mongo-spark-connector_2.13:11.1.0 \
+/workspace/src/main.py
+```
+
+---
+
+# Déroulement de l'exécution
+
+Le pipeline réalise automatiquement les opérations suivantes :
+
+1. Initialisation de Spark.
+2. Chargement des données PostgreSQL.
+3. Exécution des requêtes SQL analytiques.
+4. Chargement des données MongoDB.
+5. Chargement des fichiers JSON.
+6. Construction de la couche Bronze.
+7. Nettoyage de la couche Silver.
+8. Sauvegarde des données rejetées.
+9. Contrôles qualité.
+10. Construction des DataFrames Gold.
+11. Validation finale.
+12. Sauvegarde des données Gold.
+13. Sauvegarde des résultats SQL.
+14. Résumé d'exécution.
+
+---
+
+# Points forts du projet
+
+- Architecture Bronze → Silver → Gold.
+- Pipeline ETL distribué avec Apache Spark.
+- Intégration de plusieurs sources de données.
+- Contrôles qualité automatisés.
+- Gestion des données rejetées.
+- Production de DataFrames métiers.
+- Requêtes SQL exécutées automatiquement.
+- Export des résultats au format Parquet.
+- Projet entièrement conteneurisé avec Docker.
+
+---
+
+# Améliorations possibles
+
+Les évolutions envisageables sont notamment :
+
+- intégration de Delta Lake ;
+- orchestration avec Apache Airflow ;
+- chargements incrémentaux ;
+- mise en place de tests unitaires ;
+- pipeline CI/CD ;
+- tableaux de bord Power BI ou Grafana ;
+- suivi de la qualité des données ;
+- catalogue de données.
+
+---
+
+# Auteur
+
+Projet réalisé dans le cadre d'un **TP de traitement de données multisources**.
+
+Ce projet illustre la conception d'un pipeline ETL distribué avec **Apache Spark**, **PostgreSQL**, **MongoDB** et **Docker**, suivant une architecture **Bronze → Silver → Gold**.
+
